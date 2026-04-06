@@ -1,0 +1,5 @@
+{
+  "name": "APEX Topsport App",
+  "description": "A mobile-first dashboard for student-athletes at a topsport boarding school, featuring wellness check-ins, dual career calendar, and leave requests.",
+  "requestFramePermissions": []
+}
