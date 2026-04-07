@@ -10,7 +10,7 @@ export const Sidebar = ({ activeTab, setActiveTab }: { activeTab: string, setAct
   ];
 
   return (
-    <div className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 h-screen text-gray-900 shrink-0">
+    <div className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 h-full text-gray-900 shrink-0">
       <div className="p-6">
         <div className="text-2xl font-bold tracking-tight mb-8">APEX</div>
         <div className="space-y-2">

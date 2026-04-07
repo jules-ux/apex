@@ -35,7 +35,7 @@ export default function App() {
   };
 
   return (
-    <div className="h-[100dvh] w-full bg-gray-50 flex font-sans overflow-hidden relative">
+    <div className="h-full w-full bg-gray-50 flex font-sans overflow-hidden relative">
       <CommandPalette setActiveTab={setActiveTab} />
       <DynamicNotch activeTab={activeTab} />
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
