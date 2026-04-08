@@ -3,7 +3,7 @@ import { LayoutDashboard, Users, CalendarDays, Activity, Settings } from 'lucide
 export const Sidebar = ({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (tab: string) => void }) => {
   const tabs = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { id: 'roster', icon: Users, label: 'Roster' },
+    { id: 'students', icon: Users, label: 'Groups' },
     { id: 'logistics', icon: CalendarDays, label: 'Logistics' },
     { id: 'medical', icon: Activity, label: 'Medical' },
     { id: 'settings', icon: Settings, label: 'Settings' },

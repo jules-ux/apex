@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, LayoutDashboard, Users, CalendarDays, Activity, Settings, CheckCircle, MessageSquare, PlusCircle } from 'lucide-react';
+import { athletes } from './AdminStudents';
 
 interface CommandPaletteProps {
   setActiveTab: (tab: string) => void;
@@ -35,9 +36,9 @@ export const CommandPalette = ({ setActiveTab }: CommandPaletteProps) => {
     }
   }, [isOpen]);
 
-  const commands = [
+  const baseCommands = [
     { id: 'nav-dashboard', title: 'Go to Dashboard', icon: LayoutDashboard, category: 'Navigation', action: () => setActiveTab('dashboard') },
-    { id: 'nav-roster', title: 'Go to Roster', icon: Users, category: 'Navigation', action: () => setActiveTab('roster') },
+    { id: 'nav-groups', title: 'Go to Groups', icon: Users, category: 'Navigation', action: () => setActiveTab('students') },
     { id: 'nav-logistics', title: 'Go to Logistics', icon: CalendarDays, category: 'Navigation', action: () => setActiveTab('logistics') },
     { id: 'nav-medical', title: 'Go to Medical', icon: Activity, category: 'Navigation', action: () => setActiveTab('medical') },
     { id: 'nav-settings', title: 'Go to Settings', icon: Settings, category: 'Navigation', action: () => setActiveTab('settings') },
@@ -47,9 +48,44 @@ export const CommandPalette = ({ setActiveTab }: CommandPaletteProps) => {
     { id: 'act-injury', title: 'Log new injury report', icon: PlusCircle, category: 'Quick Actions', action: () => console.log('Log injury') },
   ];
 
+  const studentCommands = athletes.map(a => ({
+    id: `student-${a.id}`,
+    title: a.name,
+    icon: Users,
+    category: 'Students',
+    action: () => {
+      // Set a global variable to ensure it's picked up even if the event fires before mount
+      (window as any).__pendingStudentProfile = a.id;
+      setActiveTab('students');
+      
+      // Dispatch event for when the component is already mounted
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('open-student-profile', { detail: { id: a.id } }));
+      }, 100);
+    }
+  }));
+
+  const categoryCommands = [
+    'Klassen', 'Sports', 'Dorms', 'Leerkrachten', 'Directie eerste graad', 'Personeel', 'CLB', 'Administratie', 'Beheerders'
+  ].map(cat => ({
+    id: `cat-${cat}`,
+    title: `View ${cat}`,
+    icon: LayoutDashboard,
+    category: 'Categories',
+    action: () => {
+      (window as any).__pendingCategory = cat;
+      setActiveTab('students');
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('open-category', { detail: { category: cat } }));
+      }, 100);
+    }
+  }));
+
+  const allCommands = [...baseCommands, ...studentCommands, ...categoryCommands];
+
   const filteredCommands = query === '' 
-    ? commands 
-    : commands.filter(cmd => cmd.title.toLowerCase().includes(query.toLowerCase()) || cmd.category.toLowerCase().includes(query.toLowerCase()));
+    ? baseCommands 
+    : allCommands.filter(cmd => cmd.title.toLowerCase().includes(query.toLowerCase()) || cmd.category.toLowerCase().includes(query.toLowerCase()));
 
   const handleSelect = (action: () => void) => {
     action();
