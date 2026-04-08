@@ -40,7 +40,7 @@ export const Sidebar = ({ activeTab, setActiveTab }: { activeTab: string, setAct
                 <img src={user.photoURL} alt={user.displayName || ''} className="w-10 h-10 rounded-full border border-gray-200" referrerPolicy="no-referrer" />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-sm font-bold text-blue-600 shrink-0">
-                  {user.displayName?.split(' ').map(n => n[0]).join('') || 'U'}
+                  {user.displayName?.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase() || 'U'}
                 </div>
               )}
               <div className="text-left overflow-hidden">

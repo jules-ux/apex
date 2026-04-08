@@ -90,7 +90,10 @@ export const CommandPalette = ({ setActiveTab }: CommandPaletteProps) => {
 
   const filteredCommands = query === '' 
     ? baseCommands 
-    : allCommands.filter(cmd => cmd.title.toLowerCase().includes(query.toLowerCase()) || cmd.category.toLowerCase().includes(query.toLowerCase()));
+    : allCommands.filter(cmd => 
+        (cmd.title || '').toLowerCase().includes(query.toLowerCase()) || 
+        (cmd.category || '').toLowerCase().includes(query.toLowerCase())
+      );
 
   const handleSelect = (action: () => void) => {
     action();

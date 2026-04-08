@@ -28,7 +28,7 @@ export const AdminSettings = () => {
                     <img src={user.photoURL} alt={user.displayName || ''} className="w-16 h-16 rounded-full border-2 border-gray-100" referrerPolicy="no-referrer" />
                   ) : (
                     <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center text-xl font-bold text-blue-600">
-                      {user.displayName?.split(' ').map(n => n[0]).join('') || 'U'}
+                      {user.displayName?.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase() || 'U'}
                     </div>
                   )}
                   <div>

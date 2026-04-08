@@ -80,7 +80,8 @@ export const AdminStudents = () => {
 
   const getInitials = (athlete: any) => {
     const name = getFullName(athlete);
-    return name.split(' ').map((n: string) => n[0]).join('');
+    if (!name) return '?';
+    return name.split(' ').filter(Boolean).map((n: string) => n[0]).join('').toUpperCase();
   };
 
   useEffect(() => {
