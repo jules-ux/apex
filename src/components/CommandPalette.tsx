@@ -2,12 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, LayoutDashboard, Users, CalendarDays, Activity, Settings, CheckCircle, MessageSquare, PlusCircle } from 'lucide-react';
 import { athletesData } from './AdminStudents';
+import { useAuth } from '../AuthContext';
 
 interface CommandPaletteProps {
   setActiveTab: (tab: string) => void;
 }
 
 export const CommandPalette = ({ setActiveTab }: CommandPaletteProps) => {
+  const { user } = useAuth();
+  const isAdmin = user?.email === 'jules_stoop@icloud.com';
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -37,23 +40,28 @@ export const CommandPalette = ({ setActiveTab }: CommandPaletteProps) => {
   }, [isOpen]);
 
   const baseCommands = [
-    { id: 'nav-dashboard', title: 'Go to Dashboard', icon: LayoutDashboard, category: 'Navigation', action: () => setActiveTab('dashboard') },
-    { id: 'nav-groups', title: 'Go to Groups', icon: Users, category: 'Navigation', action: () => setActiveTab('students') },
-    { id: 'nav-logistics', title: 'Go to Logistics', icon: CalendarDays, category: 'Navigation', action: () => setActiveTab('logistics') },
-    { id: 'nav-medical', title: 'Go to Medical', icon: Activity, category: 'Navigation', action: () => setActiveTab('medical') },
+    { id: 'nav-dashboard', title: 'Go to Dashboard', icon: LayoutDashboard, category: 'Navigation', adminOnly: true, action: () => setActiveTab('dashboard') },
+    { id: 'nav-groups', title: 'Go to Groups', icon: Users, category: 'Navigation', adminOnly: true, action: () => setActiveTab('students') },
+    { id: 'nav-logistics', title: 'Go to Logistics', icon: CalendarDays, category: 'Navigation', adminOnly: true, action: () => setActiveTab('logistics') },
+    { id: 'nav-medical', title: 'Go to Medical', icon: Activity, category: 'Navigation', adminOnly: true, action: () => setActiveTab('medical') },
+    { id: 'nav-parent', title: 'Go to Parent Portal', icon: LayoutDashboard, category: 'Navigation', parentOnly: true, action: () => setActiveTab('parent') },
     { id: 'nav-settings', title: 'Go to Settings', icon: Settings, category: 'Navigation', action: () => setActiveTab('settings') },
     
-    { id: 'act-approve', title: 'Approve all pending leave', icon: CheckCircle, category: 'Quick Actions', action: () => console.log('Approved all') },
-    { id: 'act-message', title: 'Message all coaches', icon: MessageSquare, category: 'Quick Actions', action: () => console.log('Message coaches') },
-    { id: 'act-injury', title: 'Log new injury report', icon: PlusCircle, category: 'Quick Actions', action: () => console.log('Log injury') },
-  ];
+    { id: 'act-approve', title: 'Approve all pending leave', icon: CheckCircle, category: 'Quick Actions', adminOnly: true, action: () => console.log('Approved all') },
+    { id: 'act-message', title: 'Message all coaches', icon: MessageSquare, category: 'Quick Actions', adminOnly: true, action: () => console.log('Message coaches') },
+    { id: 'act-injury', title: 'Log new injury report', icon: PlusCircle, category: 'Quick Actions', adminOnly: true, action: () => console.log('Log injury') },
+  ].filter(cmd => {
+    if (cmd.adminOnly && !isAdmin) return false;
+    if (cmd.parentOnly && isAdmin) return false;
+    return true;
+  });
 
   const getFullName = (athlete: any) => {
     if (athlete.name) return athlete.name;
     return `${athlete.firstName || ''} ${athlete.lastName || ''}`.trim();
   };
 
-  const studentCommands = athletesData.map(a => ({
+  const studentCommands = isAdmin ? athletesData.map(a => ({
     id: `student-${a.id}`,
     title: getFullName(a),
     icon: Users,
@@ -68,9 +76,9 @@ export const CommandPalette = ({ setActiveTab }: CommandPaletteProps) => {
         window.dispatchEvent(new CustomEvent('open-student-profile', { detail: { id: a.id } }));
       }, 100);
     }
-  }));
+  })) : [];
 
-  const categoryCommands = [
+  const categoryCommands = isAdmin ? [
     'Klassen', 'Sports', 'Dorms', 'Leerkrachten', 'Directie eerste graad', 'Personeel', 'CLB', 'Administratie', 'Beheerders'
   ].map(cat => ({
     id: `cat-${cat}`,
@@ -84,7 +92,7 @@ export const CommandPalette = ({ setActiveTab }: CommandPaletteProps) => {
         window.dispatchEvent(new CustomEvent('open-category', { detail: { category: cat } }));
       }, 100);
     }
-  }));
+  })) : [];
 
   const allCommands = [...baseCommands, ...studentCommands, ...categoryCommands];
 

@@ -21,7 +21,8 @@ const AppContent = () => {
   const { user, loading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const isAdmin = user?.email === 'jules_stoop@icloud.com';
+  const [activeTab, setActiveTab] = useState(isAdmin ? 'dashboard' : 'parent');
 
   // Sync tab with URL
   useEffect(() => {
@@ -52,6 +53,12 @@ const AppContent = () => {
   // If not logged in and not on login page, redirect to login
   if (!user && location.pathname !== '/login') {
     return <Navigate to="/login" replace />;
+  }
+
+  // Protect admin routes
+  const adminRoutes = ['/dashboard', '/students', '/logistics', '/medical'];
+  if (user && !isAdmin && adminRoutes.includes(location.pathname)) {
+    return <Navigate to="/parent" replace />;
   }
 
   const isOnboarding = location.pathname === '/onboarding';
@@ -88,15 +95,15 @@ const AppContent = () => {
                 className="flex-1 flex flex-col overflow-hidden h-full"
               >
                 <Routes>
-                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/dashboard" element={<AdminDashboard />} />
-                  <Route path="/students" element={<AdminStudents />} />
-                  <Route path="/logistics" element={<AdminLogistics />} />
-                  <Route path="/medical" element={<AdminMedical />} />
+                  <Route path="/" element={<Navigate to={isAdmin ? "/dashboard" : "/parent"} replace />} />
+                  <Route path="/dashboard" element={isAdmin ? <AdminDashboard /> : <Navigate to="/parent" replace />} />
+                  <Route path="/students" element={isAdmin ? <AdminStudents /> : <Navigate to="/parent" replace />} />
+                  <Route path="/logistics" element={isAdmin ? <AdminLogistics /> : <Navigate to="/parent" replace />} />
+                  <Route path="/medical" element={isAdmin ? <AdminMedical /> : <Navigate to="/parent" replace />} />
                   <Route path="/settings" element={<AdminSettings />} />
                   <Route path="/parent" element={<ParentPortal />} />
                   <Route path="/onboarding" element={<Navigate to="/onboarding" replace />} />
-                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="*" element={<Navigate to={isAdmin ? "/dashboard" : "/parent"} replace />} />
                 </Routes>
               </motion.div>
             </AnimatePresence>
