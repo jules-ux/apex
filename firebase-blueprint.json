@@ -19,9 +19,22 @@
         "academicStatus": { "type": "string", "description": "Academic standing status" },
         "gpa": { "type": "string", "description": "Grade Point Average" },
         "tags": { "type": "array", "items": { "type": "string" }, "description": "Flexible tagging system for groups, dorms, etc." },
-        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp" }
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp" },
+        "createdBy": { "type": "string", "description": "UID of the user who created this member (parent)" }
       },
-      "required": ["id", "schoolId", "name", "type", "wellness"]
+      "required": ["id", "schoolId", "firstName", "lastName", "type", "wellness"]
+    },
+    "OnboardingCode": {
+      "title": "Onboarding Code",
+      "description": "A code used by parents to onboard their children to a specific school.",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "description": "The unique onboarding code" },
+        "schoolId": { "type": "string", "description": "The school this code is linked to" },
+        "active": { "type": "boolean", "description": "Whether the code is currently active" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["code", "schoolId", "active"]
     },
     "School": {
       "title": "School",

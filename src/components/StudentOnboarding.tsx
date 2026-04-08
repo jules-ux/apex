@@ -10,7 +10,12 @@ import { db, setDoc, doc, OperationType, handleFirestoreError } from '../firebas
 import { useAuth } from '../AuthContext';
 import { useSchool } from '../SchoolContext';
 
-export const StudentOnboarding = () => {
+interface StudentOnboardingProps {
+  overrideSchoolId?: string;
+  onComplete?: () => void;
+}
+
+export const StudentOnboarding = ({ overrideSchoolId, onComplete }: StudentOnboardingProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { selectedSchool, schools } = useSchool();
@@ -18,11 +23,13 @@ export const StudentOnboarding = () => {
   const [showMiddleName, setShowMiddleName] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  const initialSchoolId = overrideSchoolId || selectedSchool.id;
+
   const [formData, setFormData] = useState({
     firstName: '',
     middleName: '',
     lastName: '',
-    schoolId: selectedSchool.id,
+    schoolId: initialSchoolId,
     type: 'student',
     sport: '',
     class: '',
@@ -33,8 +40,10 @@ export const StudentOnboarding = () => {
   });
 
   useEffect(() => {
-    setFormData(prev => ({ ...prev, schoolId: selectedSchool.id }));
-  }, [selectedSchool.id]);
+    if (!overrideSchoolId) {
+      setFormData(prev => ({ ...prev, schoolId: selectedSchool.id }));
+    }
+  }, [selectedSchool.id, overrideSchoolId]);
 
   const nextStep = () => setStep(prev => prev + 1);
   const prevStep = () => setStep(prev => prev - 1);
@@ -60,12 +69,18 @@ export const StudentOnboarding = () => {
       console.error("Background save failed:", error);
     });
 
-    // Instant redirect
-    navigate(redirectPath);
+    // Instant redirect or callback
+    if (onComplete) {
+      onComplete();
+    } else {
+      navigate(redirectPath);
+    }
   };
 
+  const isSchoolLocked = !!overrideSchoolId;
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 md:p-8">
+    <div className={`${onComplete ? '' : 'min-h-screen bg-gray-50'} flex flex-col items-center justify-center p-4 md:p-8`}>
       {/* Progress Bar */}
       <div className="max-w-2xl w-full mb-8">
         <div className="flex justify-between mb-2">
@@ -168,13 +183,17 @@ export const StudentOnboarding = () => {
                       {schools.map(school => (
                         <button
                           key={school.id}
+                          disabled={isSchoolLocked}
                           onClick={() => setFormData(prev => ({ ...prev, schoolId: school.id }))}
-                          className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${formData.schoolId === school.id ? 'border-blue-600 bg-blue-50/50' : 'border-gray-100 hover:border-gray-200 bg-white'}`}
+                          className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${formData.schoolId === school.id ? 'border-blue-600 bg-blue-50/50' : 'border-gray-100 hover:border-gray-200 bg-white'} ${isSchoolLocked && formData.schoolId !== school.id ? 'opacity-50 grayscale' : ''}`}
                         >
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${formData.schoolId === school.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
                             <School className="w-5 h-5" />
                           </div>
                           <span className={`font-bold ${formData.schoolId === school.id ? 'text-blue-700' : 'text-gray-700'}`}>{school.name}</span>
+                          {isSchoolLocked && formData.schoolId === school.id && (
+                            <div className="ml-auto px-2 py-1 bg-blue-100 text-blue-600 text-[10px] font-bold rounded uppercase">Locked</div>
+                          )}
                         </button>
                       ))}
                     </div>

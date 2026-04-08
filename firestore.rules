@@ -66,6 +66,13 @@ service cloud.firestore {
              (!('createdBy' in data) || (data.createdBy == request.auth.uid));
     }
 
+    function isValidOnboardingCode(data) {
+      return data.keys().hasAll(['code', 'schoolId', 'active']) &&
+             data.code is string && data.code.size() > 0 &&
+             data.schoolId is string &&
+             data.active is bool;
+    }
+
     function isValidSchool(data) {
       return data.keys().hasAll(['id', 'name', 'type']) &&
              data.id is string && data.id.size() < 50 &&
@@ -84,9 +91,16 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    match /onboarding_codes/{codeId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin() && isValidOnboardingCode(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
     match /schools/{schoolId} {
       allow read: if isAuthenticated();
-      allow write: if isAdmin() && isValidSchool(request.resource.data);
+      allow create, update: if isAdmin() && isValidSchool(request.resource.data);
+      allow delete: if isAdmin();
     }
 
     match /users/{userId} {

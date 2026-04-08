@@ -2,10 +2,15 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronRight, Building } from 'lucide-react';
 import { useSchool } from '../SchoolContext';
+import { useAuth } from '../AuthContext';
 
 export const TopSchoolSelector = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { selectedSchool, setSelectedSchool, schools } = useSchool();
+  const { user } = useAuth();
+  const isAdmin = user?.email === 'jules_stoop@icloud.com';
+
+  if (!isAdmin) return null;
 
   return (
     <motion.div 

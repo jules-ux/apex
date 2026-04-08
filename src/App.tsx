@@ -78,7 +78,7 @@ const AppContent = () => {
             <div className="absolute top-0 left-0 right-0 z-50 pt-6 pl-4 md:pl-8 pr-4 md:pr-8 flex items-center justify-between pointer-events-none">
               <div className="flex items-center gap-3 pointer-events-auto">
                 <div id="top-left-portal" className="flex items-center gap-3 empty:hidden"></div>
-                <TopSchoolSelector />
+                {activeTab !== 'settings' && <TopSchoolSelector />}
               </div>
               <div className="flex items-center gap-3 pointer-events-auto">
                 <div id="top-right-portal" className="flex items-center gap-3 empty:hidden"></div>

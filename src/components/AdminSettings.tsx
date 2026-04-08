@@ -1,12 +1,65 @@
-import { User, LogOut, Shield, Bell, Globe, Lock, Mail, UserCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { User, LogOut, Shield, Bell, Globe, Lock, Mail, UserCircle, Link as LinkIcon, Plus, Trash2, Copy, Check } from 'lucide-react';
 import { useAuth } from '../AuthContext';
+import { useSchool } from '../SchoolContext';
+import { db, collection, setDoc, doc, onSnapshot, query, where, deleteDoc } from '../firebase';
 
 export const AdminSettings = () => {
   const { user, login, logout } = useAuth();
+  const { schools, selectedSchool } = useSchool();
+  const [codes, setCodes] = useState<any[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  const isAdmin = user?.email === 'jules_stoop@icloud.com';
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const q = query(collection(db, 'onboarding_codes'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const codesList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setCodes(codesList);
+    });
+    return unsubscribe;
+  }, [isAdmin]);
+
+  const generateCode = async () => {
+    setIsGenerating(true);
+    try {
+      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const codeId = crypto.randomUUID();
+      await setDoc(doc(db, 'onboarding_codes', codeId), {
+        id: codeId,
+        code,
+        schoolId: selectedSchool.id,
+        active: true,
+        createdAt: new Date().toISOString(),
+        createdBy: user?.uid
+      });
+    } catch (error) {
+      console.error("Error generating code:", error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const deleteCode = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'onboarding_codes', id));
+    } catch (error) {
+      console.error("Error deleting code:", error);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedCode(text);
+    setTimeout(() => setCopiedCode(null), 2000);
+  };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-8 pt-28 md:pt-24">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-8 pt-16 md:pt-12">
+      <div className="max-w-5xl space-y-8 text-left">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Settings</h1>
           <p className="text-sm text-gray-500">Manage your account and application preferences.</p>
@@ -60,6 +113,69 @@ export const AdminSettings = () => {
             )}
           </div>
         </div>
+
+        {/* Onboarding Codes Section (Admin Only) */}
+        {isAdmin && (
+          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-50 rounded-lg">
+                  <LinkIcon className="w-5 h-5 text-orange-600" />
+                </div>
+                <div>
+                  <h2 className="font-semibold text-gray-900">Onboarding Codes</h2>
+                  <p className="text-xs text-gray-500">Generate codes for parents to add their children.</p>
+                </div>
+              </div>
+              <button 
+                onClick={generateCode}
+                disabled={isGenerating}
+                className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-colors text-sm font-medium disabled:opacity-50"
+              >
+                <Plus className="w-4 h-4" />
+                Generate Code
+              </button>
+            </div>
+            <div className="p-6">
+              {codes.length === 0 ? (
+                <div className="text-center py-8 border-2 border-dashed border-gray-100 rounded-2xl">
+                  <p className="text-sm text-gray-400">No onboarding codes generated yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {codes.map(code => (
+                    <div key={code.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                      <div className="flex items-center gap-4">
+                        <div className="text-lg font-mono font-bold text-gray-900 tracking-wider">
+                          {code.code}
+                        </div>
+                        <div className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded uppercase">
+                          {schools.find(s => s.id === code.schoolId)?.name || 'Unknown School'}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => copyToClipboard(code.code)}
+                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Copy Code"
+                        >
+                          {copiedCode === code.code ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+                        </button>
+                        <button 
+                          onClick={() => deleteCode(code.id)}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete Code"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Other Settings Placeholders */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
