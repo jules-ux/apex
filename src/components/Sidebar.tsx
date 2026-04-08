@@ -3,13 +3,20 @@ import { useAuth } from '../AuthContext';
 
 export const Sidebar = ({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (tab: string) => void }) => {
   const { user, login, logout } = useAuth();
+  const isAdmin = user?.email === 'jules_stoop@icloud.com';
+
   const tabs = [
-    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { id: 'students', icon: Users, label: 'Groups' },
-    { id: 'logistics', icon: CalendarDays, label: 'Logistics' },
-    { id: 'medical', icon: Activity, label: 'Medical' },
+    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', adminOnly: true },
+    { id: 'students', icon: Users, label: 'Groups', adminOnly: true },
+    { id: 'logistics', icon: CalendarDays, label: 'Logistics', adminOnly: true },
+    { id: 'medical', icon: Activity, label: 'Medical', adminOnly: true },
+    { id: 'parent', icon: LayoutDashboard, label: 'Parent Portal', parentOnly: true },
     { id: 'settings', icon: Settings, label: 'Settings' },
-  ];
+  ].filter(tab => {
+    if (tab.adminOnly && !isAdmin) return false;
+    if (tab.parentOnly && isAdmin) return false;
+    return true;
+  });
 
   return (
     <div className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 h-full text-gray-900 shrink-0">

@@ -62,7 +62,8 @@ service cloud.firestore {
              (!('trend' in data) || (data.trend in ['up', 'down', 'stable'])) &&
              (!('academicStatus' in data) || (data.academicStatus is string && data.academicStatus.size() < 50)) &&
              (!('gpa' in data) || (data.gpa is string && data.gpa.size() < 10)) &&
-             (!('tags' in data) || (data.tags is list && data.tags.size() < 50));
+             (!('tags' in data) || (data.tags is list && data.tags.size() < 50)) &&
+             (!('createdBy' in data) || (data.createdBy == request.auth.uid));
     }
 
     function isValidSchool(data) {
@@ -78,7 +79,7 @@ service cloud.firestore {
 
     match /members/{memberId} {
       allow read: if isAuthenticated();
-      allow create: if isAdmin() && isValidMember(request.resource.data);
+      allow create: if isAuthenticated() && isValidMember(request.resource.data);
       allow update: if isAdmin() && isValidMember(request.resource.data);
       allow delete: if isAdmin();
     }

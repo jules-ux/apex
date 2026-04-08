@@ -12,6 +12,7 @@ import { AdminSettings } from './components/AdminSettings';
 import { StudentOnboarding } from './components/StudentOnboarding';
 import { CommandPalette } from './components/CommandPalette';
 import { LoginPage } from './components/LoginPage';
+import { ParentPortal } from './components/ParentPortal';
 
 import { AuthProvider, useAuth } from './AuthContext';
 import { SchoolProvider } from './SchoolContext';
@@ -25,7 +26,7 @@ const AppContent = () => {
   // Sync tab with URL
   useEffect(() => {
     const path = location.pathname.substring(1);
-    if (['dashboard', 'students', 'logistics', 'medical', 'settings'].includes(path)) {
+    if (['dashboard', 'students', 'logistics', 'medical', 'settings', 'parent'].includes(path)) {
       setActiveTab(path);
     }
   }, [location]);
@@ -93,6 +94,7 @@ const AppContent = () => {
                   <Route path="/logistics" element={<AdminLogistics />} />
                   <Route path="/medical" element={<AdminMedical />} />
                   <Route path="/settings" element={<AdminSettings />} />
+                  <Route path="/parent" element={<ParentPortal />} />
                   <Route path="/onboarding" element={<Navigate to="/onboarding" replace />} />
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>

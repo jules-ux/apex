@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 import { 
   ChevronRight, ChevronLeft, Building, User, HeartPulse, 
   Trophy, GraduationCap, CheckCircle2, Plus, X, Loader2,
@@ -10,12 +11,12 @@ import { useAuth } from '../AuthContext';
 import { useSchool } from '../SchoolContext';
 
 export const StudentOnboarding = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { selectedSchool, schools } = useSchool();
   const [step, setStep] = useState(1);
   const [showMiddleName, setShowMiddleName] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -39,51 +40,29 @@ export const StudentOnboarding = () => {
   const prevStep = () => setStep(prev => prev - 1);
 
   const handleSubmit = async () => {
-    setIsSaving(true);
-    try {
-      const memberId = crypto.randomUUID();
-      const memberData = {
-        ...formData,
-        id: memberId,
-        name: `${formData.firstName} ${formData.middleName ? formData.middleName + ' ' : ''}${formData.lastName}`.trim(),
-        trend: 'stable',
-        updatedAt: new Date().toISOString()
-      };
-      
-      await setDoc(doc(db, 'members', memberId), memberData);
-      setIsCompleted(true);
-    } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'members');
-    } finally {
-      setIsSaving(false);
-    }
-  };
+    // Determine role and redirect path immediately
+    const isAdmin = user?.email === 'jules_stoop@icloud.com';
+    const redirectPath = isAdmin ? '/students' : '/parent';
+    
+    // Start background save
+    const memberId = crypto.randomUUID();
+    const memberData = {
+      ...formData,
+      id: memberId,
+      name: `${formData.firstName} ${formData.middleName ? formData.middleName + ' ' : ''}${formData.lastName}`.trim(),
+      trend: 'stable',
+      updatedAt: new Date().toISOString(),
+      createdBy: user?.uid
+    };
+    
+    // We don't await this to make it "instant" for the user
+    setDoc(doc(db, 'members', memberId), memberData).catch(error => {
+      console.error("Background save failed:", error);
+    });
 
-  if (isCompleted) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-6">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full text-center space-y-6"
-        >
-          <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="w-10 h-10" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900">Onboarding Complete!</h1>
-          <p className="text-gray-500">
-            {formData.firstName}'s profile has been successfully created and linked to {schools.find(s => s.id === formData.schoolId)?.name}.
-          </p>
-          <button 
-            onClick={() => window.location.href = '/'}
-            className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
-          >
-            Go to Dashboard
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
+    // Instant redirect
+    navigate(redirectPath);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 md:p-8">

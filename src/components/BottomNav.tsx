@@ -1,13 +1,22 @@
 import { LayoutDashboard, Users, CalendarDays, Activity, Settings } from 'lucide-react';
+import { useAuth } from '../AuthContext';
 
 export const BottomNav = ({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (tab: string) => void }) => {
+  const { user } = useAuth();
+  const isAdmin = user?.email === 'jules_stoop@icloud.com';
+
   const tabs = [
-    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { id: 'students', icon: Users, label: 'Groups' },
-    { id: 'logistics', icon: CalendarDays, label: 'Logistics' },
-    { id: 'medical', icon: Activity, label: 'Medical' },
+    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', adminOnly: true },
+    { id: 'students', icon: Users, label: 'Groups', adminOnly: true },
+    { id: 'logistics', icon: CalendarDays, label: 'Logistics', adminOnly: true },
+    { id: 'medical', icon: Activity, label: 'Medical', adminOnly: true },
+    { id: 'parent', icon: LayoutDashboard, label: 'Parent Portal', parentOnly: true },
     { id: 'settings', icon: Settings, label: 'Settings' },
-  ];
+  ].filter(tab => {
+    if (tab.adminOnly && !isAdmin) return false;
+    if (tab.parentOnly && isAdmin) return false;
+    return true;
+  });
 
   return (
     <div className="md:hidden flex bg-white border-t border-gray-200 pb-safe pt-2 px-2 justify-between z-50 relative">
