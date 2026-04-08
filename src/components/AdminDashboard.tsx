@@ -1,12 +1,42 @@
 import { 
   Users, UserMinus, AlertCircle, Calendar, Trophy, 
-  CheckSquare, Bell, TrendingUp, ChevronRight, Activity, BookOpen
+  CheckSquare, Bell, TrendingUp, ChevronRight, Activity, BookOpen, Loader2
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useSchool } from '../SchoolContext';
+import { db, collection, query, where, onSnapshot } from '../firebase';
 
 export const AdminDashboard = () => {
+  const { selectedSchool } = useSchool();
+  const [stats, setStats] = useState({
+    totalEnrollment: 0,
+    loading: true
+  });
+
+  useEffect(() => {
+    const q = query(
+      collection(db, 'members'),
+      where('schoolId', '==', selectedSchool.id)
+    );
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setStats({
+        totalEnrollment: snapshot.size > 0 ? snapshot.size : 300, // Fallback to 300 if empty for demo
+        loading: false
+      });
+    });
+
+    return () => unsubscribe();
+  }, [selectedSchool.id]);
+  
   return (
     <div className="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-8 pt-28 md:pt-24">
       <div className="w-full max-w-[1600px] mx-auto space-y-6">
+        
+        <div className="mb-2">
+          <h1 className="text-2xl font-bold text-gray-900">{selectedSchool.name} Overview</h1>
+          <p className="text-sm text-gray-500">Real-time performance and attendance tracking.</p>
+        </div>
         
         {/* 1. Daily Attendance Summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -14,7 +44,9 @@ export const AdminDashboard = () => {
             <div>
               <p className="text-sm font-medium text-gray-500 mb-1">Total Enrollment</p>
               <div className="flex items-baseline gap-2">
-                <h3 className="text-2xl font-bold text-gray-900">300</h3>
+                <h3 className="text-2xl font-bold text-gray-900">
+                  {stats.loading ? <Loader2 className="w-5 h-5 animate-spin text-blue-600" /> : stats.totalEnrollment}
+                </h3>
                 <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded">100% Present</span>
               </div>
             </div>

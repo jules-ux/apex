@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, LayoutDashboard, Users, CalendarDays, Activity, Settings, CheckCircle, MessageSquare, PlusCircle } from 'lucide-react';
-import { athletes } from './AdminStudents';
+import { athletesData } from './AdminStudents';
 
 interface CommandPaletteProps {
   setActiveTab: (tab: string) => void;
@@ -48,9 +48,14 @@ export const CommandPalette = ({ setActiveTab }: CommandPaletteProps) => {
     { id: 'act-injury', title: 'Log new injury report', icon: PlusCircle, category: 'Quick Actions', action: () => console.log('Log injury') },
   ];
 
-  const studentCommands = athletes.map(a => ({
+  const getFullName = (athlete: any) => {
+    if (athlete.name) return athlete.name;
+    return `${athlete.firstName || ''} ${athlete.lastName || ''}`.trim();
+  };
+
+  const studentCommands = athletesData.map(a => ({
     id: `student-${a.id}`,
-    title: a.name,
+    title: getFullName(a),
     icon: Users,
     category: 'Students',
     action: () => {

@@ -1,19 +1,24 @@
-import { useState, useEffect } from 'react';
-import { Search, Filter, MoreHorizontal, ArrowUpRight, ArrowDownRight, Minus, ChevronRight, Building, Users, Trophy, ArrowLeft, GraduationCap, Activity, ArrowRightLeft, ArrowRight, Save, AlertTriangle, Shield, Briefcase, HeartPulse, MessageSquare, X, Maximize2, Minimize2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Filter, MoreHorizontal, ArrowUpRight, ArrowDownRight, Minus, ChevronRight, Building, Users, Trophy, ArrowLeft, GraduationCap, Activity, ArrowRightLeft, ArrowRight, Save, AlertTriangle, Shield, Briefcase, HeartPulse, MessageSquare, X, Maximize2, Minimize2, Loader2, Plus } from 'lucide-react';
 import { TopBarPortal } from './TopBarPortal';
 import { TopRightPortal } from './TopRightPortal';
+import { db, collection, onSnapshot, query, where, handleFirestoreError, OperationType, setDoc, doc } from '../firebase';
+import { useAuth } from '../AuthContext';
+import { useSchool } from '../SchoolContext';
 
-export const athletes = [
-  { id: '1', name: 'Thomas Vermeersch', sport: 'Swimming', location: 'Main Pool', wellness: 85, trend: 'up', academic: 'Good Standing', gpa: '3.8', groups: ['1 A', 'Swimming', 'North Dorm'] },
-  { id: '2', name: 'Sarah Jenkins', sport: 'Basketball', location: 'Class (B204)', wellness: 62, trend: 'down', academic: 'Warning', gpa: '2.4', groups: ['3 BO', 'Basketball', 'South Dorm'] },
-  { id: '3', name: 'Marcus Johnson', sport: 'Track & Field', location: 'Physio', wellness: 45, trend: 'down', academic: 'Good Standing', gpa: '3.2', groups: ['5 ADB', 'Track & Field', 'East Dorm'] },
-  { id: '4', name: 'Emma Wilson', sport: 'Gymnastics', location: 'Dormitory', wellness: 92, trend: 'stable', academic: 'Excellence', gpa: '4.0', groups: ['2 A Eco', 'Gymnastics', 'West Dorm'] },
-  { id: '5', name: 'David Chen', sport: 'Swimming', location: 'Main Pool', wellness: 78, trend: 'up', academic: 'Good Standing', gpa: '3.5', groups: ['4 ECO', 'Swimming', 'North Dorm'] },
-  { id: '6', name: 'Lucas Peeters', sport: 'Basketball', location: 'Weight Room', wellness: 88, trend: 'stable', academic: 'Good Standing', gpa: '3.1', groups: ['6 BI', 'Basketball', 'South Dorm'] },
-  { id: '7', name: 'Mia Rodriguez', sport: 'Track & Field', location: 'Class (A101)', wellness: 71, trend: 'down', academic: 'Good Standing', gpa: '3.6', groups: ['1 Ba', 'Track & Field', 'East Dorm'] },
-  { id: '8', name: 'Noah Kim', sport: 'Gymnastics', location: 'Training Hall', wellness: 95, trend: 'up', academic: 'Excellence', gpa: '3.9', groups: ['3 HT', 'Gymnastics', 'West Dorm'] },
-  { id: '9', name: 'Liam O\'Connor', sport: 'Soccer', location: 'Field 2', wellness: 82, trend: 'up', academic: 'Good Standing', gpa: '3.4', groups: ['5 BZO', 'Soccer', 'North Dorm'] },
-  { id: '10', name: 'Chloe Dubois', sport: 'Tennis', location: 'Court 4', wellness: 58, trend: 'down', academic: 'Warning', gpa: '2.8', groups: ['2 A KT', 'Tennis', 'South Dorm'] },
+export const athletesData = [
+  { id: '1', schoolId: 'apex-high', firstName: 'Thomas', lastName: 'Vermeersch', type: 'student', sport: 'Swimming', location: 'Main Pool', wellness: 85, trend: 'up', academicStatus: 'Good Standing', gpa: '3.8', tags: ['1 A', 'Swimming', 'North Dorm'], groups: ['1 A', 'Swimming', 'North Dorm'] },
+  { id: '2', schoolId: 'apex-high', firstName: 'Sarah', lastName: 'Jenkins', type: 'student', sport: 'Basketball', location: 'Class (B204)', wellness: 62, trend: 'down', academicStatus: 'Warning', gpa: '2.4', tags: ['3 BO', 'Basketball', 'South Dorm'], groups: ['3 BO', 'Basketball', 'South Dorm'] },
+  { id: '3', schoolId: 'apex-high', firstName: 'Marcus', lastName: 'Johnson', type: 'student', sport: 'Track & Field', location: 'Physio', wellness: 45, trend: 'down', academicStatus: 'Good Standing', gpa: '3.2', tags: ['5 ADB', 'Track & Field', 'East Dorm'], groups: ['5 ADB', 'Track & Field', 'East Dorm'] },
+  { id: '4', schoolId: 'apex-high', firstName: 'Emma', lastName: 'Wilson', type: 'student', sport: 'Gymnastics', location: 'Dormitory', wellness: 92, trend: 'stable', academicStatus: 'Excellence', gpa: '4.0', tags: ['2 A Eco', 'Gymnastics', 'West Dorm'], groups: ['2 A Eco', 'Gymnastics', 'West Dorm'] },
+  { id: '5', schoolId: 'apex-high', firstName: 'David', lastName: 'Chen', type: 'student', sport: 'Swimming', location: 'Main Pool', wellness: 78, trend: 'up', academicStatus: 'Good Standing', gpa: '3.5', tags: ['4 ECO', 'Swimming', 'North Dorm'], groups: ['4 ECO', 'Swimming', 'North Dorm'] },
+  { id: '6', schoolId: 'apex-high', firstName: 'Lucas', lastName: 'Peeters', type: 'student', sport: 'Basketball', location: 'Weight Room', wellness: 88, trend: 'stable', academicStatus: 'Good Standing', gpa: '3.1', tags: ['6 BI', 'Basketball', 'South Dorm'], groups: ['6 BI', 'Basketball', 'South Dorm'] },
+  { id: '7', schoolId: 'apex-high', firstName: 'Mia', lastName: 'Rodriguez', type: 'student', sport: 'Track & Field', location: 'Class (A101)', wellness: 71, trend: 'down', academicStatus: 'Good Standing', gpa: '3.6', tags: ['1 Ba', 'Track & Field', 'East Dorm'], groups: ['1 Ba', 'Track & Field', 'East Dorm'] },
+  { id: '8', schoolId: 'apex-high', firstName: 'Noah', lastName: 'Kim', type: 'student', sport: 'Gymnastics', location: 'Training Hall', wellness: 95, trend: 'up', academicStatus: 'Excellence', gpa: '3.9', tags: ['3 HT', 'Gymnastics', 'West Dorm'], groups: ['3 HT', 'Gymnastics', 'West Dorm'] },
+  { id: '9', schoolId: 'apex-high', firstName: 'Liam', lastName: 'O\'Connor', type: 'student', sport: 'Soccer', location: 'Field 2', wellness: 82, trend: 'up', academicStatus: 'Good Standing', gpa: '3.4', tags: ['5 BZO', 'Soccer', 'North Dorm'], groups: ['5 BZO', 'Soccer', 'North Dorm'] },
+  { id: '10', schoolId: 'apex-high', firstName: 'Chloe', lastName: 'Dubois', type: 'student', sport: 'Tennis', location: 'Court 4', wellness: 58, trend: 'down', academicStatus: 'Warning', gpa: '2.8', tags: ['2 A KT', 'Tennis', 'South Dorm'], groups: ['2 A KT', 'Tennis', 'South Dorm'] },
 ];
 
 const getWellnessColor = (score: number) => {
@@ -29,6 +34,11 @@ const getTrendIcon = (trend: string) => {
 };
 
 export const AdminStudents = () => {
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const { selectedSchool } = useSchool();
+  const [athletes, setAthletes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState<string | null>(null);
   const [specific, setSpecific] = useState<string | null>(null);
 
@@ -62,6 +72,53 @@ export const AdminStudents = () => {
   // Confirmation Dialog State
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+
+  const getFullName = (athlete: any) => {
+    if (athlete.name) return athlete.name;
+    return `${athlete.firstName || ''} ${athlete.middleName ? athlete.middleName + ' ' : ''}${athlete.lastName || ''}`.trim();
+  };
+
+  const getInitials = (athlete: any) => {
+    const name = getFullName(athlete);
+    return name.split(' ').map((n: string) => n[0]).join('');
+  };
+
+  useEffect(() => {
+    if (authLoading) return;
+    
+    // If not logged in, just use fallback data and stop loading
+    if (!user) {
+      setAthletes(athletesData);
+      setLoading(false);
+      return;
+    }
+
+    const q = query(
+      collection(db, 'members'),
+      where('schoolId', '==', selectedSchool.id)
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const membersList = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          // Ensure groups exists for UI compatibility
+          groups: data.tags || data.groups || []
+        };
+      });
+      setAthletes(membersList.length > 0 ? membersList : athletesData.filter(a => a.schoolId === selectedSchool.id));
+      setLoading(false);
+    }, (error) => {
+      if (!error.message.includes('permission')) {
+        handleFirestoreError(error, OperationType.LIST, 'members');
+      }
+      setAthletes(athletesData.filter(a => a.schoolId === selectedSchool.id));
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, authLoading, selectedSchool.id]);
 
   useEffect(() => {
     if (selectedAthleteId) {
@@ -193,13 +250,14 @@ export const AdminStudents = () => {
   };
 
   const filteredAthletes = athletes.filter(a => {
-    const matchesGlobalSearch = a.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                a.sport.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                a.location.toLowerCase().includes(searchQuery.toLowerCase());
+    const fullName = getFullName(a);
+    const matchesGlobalSearch = fullName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                (a.sport || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                (a.location || '').toLowerCase().includes(searchQuery.toLowerCase());
                                 
-    const matchesName = a.name.toLowerCase().includes(filters.name.toLowerCase());
-    const matchesSport = a.sport.toLowerCase().includes(filters.sport.toLowerCase());
-    const matchesLocation = a.location.toLowerCase().includes(filters.location.toLowerCase());
+    const matchesName = fullName.toLowerCase().includes(filters.name.toLowerCase());
+    const matchesSport = (a.sport || '').toLowerCase().includes(filters.sport.toLowerCase());
+    const matchesLocation = (a.location || '').toLowerCase().includes(filters.location.toLowerCase());
     
     let matchesWellness = true;
     if (filters.wellness === 'Excellent') matchesWellness = a.wellness >= 80;
@@ -286,13 +344,14 @@ export const AdminStudents = () => {
     globalSearchQuery && g.toLowerCase().includes(globalSearchQuery.toLowerCase())
   );
 
-  const globalSearchResults = athletes.filter(a => 
-    globalSearchQuery && (
-      a.name.toLowerCase().includes(globalSearchQuery.toLowerCase()) ||
-      a.sport.toLowerCase().includes(globalSearchQuery.toLowerCase()) ||
-      a.groups.some(g => g.toLowerCase().includes(globalSearchQuery.toLowerCase()))
-    )
-  );
+  const globalSearchResults = athletes.filter(a => {
+    const fullName = getFullName(a);
+    return globalSearchQuery && (
+      fullName.toLowerCase().includes(globalSearchQuery.toLowerCase()) ||
+      (a.sport || '').toLowerCase().includes(globalSearchQuery.toLowerCase()) ||
+      (a.groups || []).some((g: string) => g.toLowerCase().includes(globalSearchQuery.toLowerCase()))
+    );
+  });
 
   const handleGroupClick = (groupName: string) => {
     let targetCategory = '';
@@ -347,11 +406,32 @@ export const AdminStudents = () => {
     });
   };
 
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+          <p className="text-sm text-gray-500 font-medium">Loading members...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-8 pt-24 md:pt-20 flex flex-col">
       <TopRightPortal>
-        <div className="relative w-64">
-          <div className="relative">
+        <div className="flex items-center gap-3">
+          {user && (
+            <button 
+              onClick={() => navigate('/onboarding')}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-sm text-sm font-medium h-10 shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Add Member</span>
+            </button>
+          )}
+          <div className="relative w-64">
+            <div className="relative">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input 
               type="text" 
@@ -415,10 +495,10 @@ export const AdminStudents = () => {
                           >
                             <div className="flex items-center gap-3 mb-2">
                               <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-700 shrink-0">
-                                {athlete.name.split(' ').map(n => n[0]).join('')}
+                                {getInitials(athlete)}
                               </div>
                               <div>
-                                <div className="font-medium text-sm text-gray-900">{athlete.name}</div>
+                                <div className="font-medium text-sm text-gray-900">{getFullName(athlete)}</div>
                                 <div className="text-xs text-gray-500">{athlete.sport}</div>
                               </div>
                             </div>
@@ -447,6 +527,7 @@ export const AdminStudents = () => {
             </div>
           )}
         </div>
+      </div>
       </TopRightPortal>
 
       <TopBarPortal>
@@ -820,9 +901,9 @@ export const AdminStudents = () => {
                               <td className="px-4 py-2.5">
                                 <div className="flex items-center gap-3">
                                   <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-600 shrink-0">
-                                    {athlete.name.split(' ').map(n => n[0]).join('')}
+                                    {getInitials(athlete)}
                                   </div>
-                                  <span className="font-medium text-gray-900">{athlete.name}</span>
+                                  <span className="font-medium text-gray-900">{getFullName(athlete)}</span>
                                 </div>
                               </td>
                               <td className="px-4 py-2.5 text-gray-600">{athlete.sport}</td>
@@ -887,11 +968,11 @@ export const AdminStudents = () => {
                           <div className="p-6 border-b border-gray-200 flex items-start justify-between bg-gray-50/50">
                             <div className="flex items-center gap-4">
                               <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-xl font-bold text-blue-700 shrink-0 shadow-sm border border-blue-200">
-                                {athlete.name.split(' ').map(n => n[0]).join('')}
+                                {getInitials(athlete)}
                               </div>
                               <div>
                                 <div className="flex items-center gap-2">
-                                  <h2 className="text-xl font-bold text-gray-900">{athlete.name}</h2>
+                                  <h2 className="text-xl font-bold text-gray-900">{getFullName(athlete)}</h2>
                                   <button 
                                     onClick={() => setIsProfileExpanded(!isProfileExpanded)}
                                     className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
@@ -1030,9 +1111,9 @@ export const AdminStudents = () => {
                               <td className="px-4 py-2">
                                 <div className="flex items-center gap-3">
                                   <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-600 shrink-0">
-                                    {athlete.name.split(' ').map(n => n[0]).join('')}
+                                    {getInitials(athlete)}
                                   </div>
-                                  <span className="font-medium text-gray-900">{athlete.name}</span>
+                                  <span className="font-medium text-gray-900">{getFullName(athlete)}</span>
                                 </div>
                               </td>
                               <td className="px-4 py-2">
@@ -1168,9 +1249,9 @@ export const AdminStudents = () => {
                                 <td className="px-4 py-2">
                                   <div className="flex items-center gap-3">
                                     <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-600 shrink-0">
-                                      {athlete.name.split(' ').map(n => n[0]).join('')}
+                                      {getInitials(athlete)}
                                     </div>
-                                    <span className="font-medium text-gray-900">{athlete.name}</span>
+                                    <span className="font-medium text-gray-900">{getFullName(athlete)}</span>
                                   </div>
                                 </td>
                                 <td className="px-4 py-2">

@@ -1,0 +1,100 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: members
+// Document ID: {memberId}
+// Fields:
+//   - id: string (required)
+//   - schoolId: string (required) - ID of the school
+//   - firstName: string (required, size < 50)
+//   - middleName: string (optional, size < 50)
+//   - lastName: string (required, size < 50)
+//   - type: string (required, enum: ['student', 'staff', 'admin'])
+//   - sport: string (optional, size < 50)
+//   - class: string (optional, size < 50)
+//   - location: string (optional, size < 100)
+//   - wellness: number (required, 0-100)
+//   - trend: string (optional, enum: ['up', 'down', 'stable'])
+//   - academicStatus: string (optional, size < 50)
+//   - gpa: string (optional, size < 10)
+//   - tags: list (optional, size < 50) - Generic tags
+//   - updatedAt: timestamp (optional)
+//
+// Collection: schools
+// Document ID: {schoolId}
+// Fields:
+//   - id: string (required)
+//   - name: string (required, size < 100)
+//   - type: string (required, enum: ['high', 'middle', 'elementary'])
+//
+// ===============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "jules_stoop@icloud.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidMember(data) {
+      return data.keys().hasAll(['id', 'schoolId', 'firstName', 'lastName', 'type', 'wellness']) &&
+             data.schoolId is string && data.schoolId.size() < 50 &&
+             data.firstName is string && data.firstName.size() < 50 &&
+             data.lastName is string && data.lastName.size() < 50 &&
+             (!('middleName' in data) || (data.middleName is string && data.middleName.size() < 50)) &&
+             data.type in ['student', 'staff', 'admin'] &&
+             data.wellness is number && data.wellness >= 0 && data.wellness <= 100 &&
+             (!('sport' in data) || (data.sport is string && data.sport.size() < 50)) &&
+             (!('class' in data) || (data.class is string && data.class.size() < 50)) &&
+             (!('location' in data) || (data.location is string && data.location.size() < 100)) &&
+             (!('trend' in data) || (data.trend in ['up', 'down', 'stable'])) &&
+             (!('academicStatus' in data) || (data.academicStatus is string && data.academicStatus.size() < 50)) &&
+             (!('gpa' in data) || (data.gpa is string && data.gpa.size() < 10)) &&
+             (!('tags' in data) || (data.tags is list && data.tags.size() < 50));
+    }
+
+    function isValidSchool(data) {
+      return data.keys().hasAll(['id', 'name', 'type']) &&
+             data.id is string && data.id.size() < 50 &&
+             data.name is string && data.name.size() < 100 &&
+             data.type in ['high', 'middle', 'elementary'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /members/{memberId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() && isValidMember(request.resource.data);
+      allow update: if isAdmin() && isValidMember(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /schools/{schoolId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() && isValidSchool(request.resource.data);
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow write: if isAdmin();
+    }
+    
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

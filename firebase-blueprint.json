@@ -1,0 +1,48 @@
+{
+  "entities": {
+    "Member": {
+      "title": "Member",
+      "description": "A student or staff member in the school system.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier" },
+        "schoolId": { "type": "string", "description": "ID of the school the member belongs to" },
+        "firstName": { "type": "string", "description": "First name" },
+        "middleName": { "type": "string", "description": "Middle name (optional)" },
+        "lastName": { "type": "string", "description": "Last name" },
+        "type": { "type": "string", "enum": ["student", "staff", "admin"], "description": "Member role type" },
+        "sport": { "type": "string", "description": "Primary sport associated with the member" },
+        "class": { "type": "string", "description": "Academic class or grade" },
+        "location": { "type": "string", "description": "Current location" },
+        "wellness": { "type": "number", "description": "Wellness score (0-100)" },
+        "trend": { "type": "string", "enum": ["up", "down", "stable"], "description": "Wellness trend" },
+        "academicStatus": { "type": "string", "description": "Academic standing status" },
+        "gpa": { "type": "string", "description": "Grade Point Average" },
+        "tags": { "type": "array", "items": { "type": "string" }, "description": "Flexible tagging system for groups, dorms, etc." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp" }
+      },
+      "required": ["id", "schoolId", "name", "type", "wellness"]
+    },
+    "School": {
+      "title": "School",
+      "description": "A school entity in the system.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["high", "middle", "elementary"] }
+      },
+      "required": ["id", "name"]
+    }
+  },
+  "firestore": {
+    "/members/{memberId}": {
+      "schema": "Member",
+      "description": "Flat collection of all members across all schools."
+    },
+    "/schools/{schoolId}": {
+      "schema": "School",
+      "description": "Collection of schools."
+    }
+  }
+}

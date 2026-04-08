@@ -1,16 +1,11 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronRight, Building } from 'lucide-react';
-
-const schools = [
-  "Apex High School",
-  "Apex Middle School",
-  "Apex Elementary School"
-];
+import { useSchool } from '../SchoolContext';
 
 export const TopSchoolSelector = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedSchool, setSelectedSchool] = useState(schools[0]);
+  const { selectedSchool, setSelectedSchool, schools } = useSchool();
 
   return (
     <motion.div 
@@ -25,7 +20,7 @@ export const TopSchoolSelector = () => {
         <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
           <Building className="w-3.5 h-3.5" />
         </div>
-        <span className="text-sm font-semibold text-gray-900 whitespace-nowrap">{selectedSchool}</span>
+        <span className="text-sm font-semibold text-gray-900 whitespace-nowrap">{selectedSchool.name}</span>
       </motion.div>
       
       <motion.div layout className="w-px h-4 bg-gray-200 mx-1 shrink-0" />
@@ -49,16 +44,16 @@ export const TopSchoolSelector = () => {
             className="flex items-center overflow-hidden whitespace-nowrap"
           >
             <div className="flex items-center gap-1 pr-2">
-              {schools.filter(s => s !== selectedSchool).map(school => (
+              {schools.filter(s => s.id !== selectedSchool.id).map(school => (
                 <button
-                  key={school}
+                  key={school.id}
                   onClick={() => {
                     setSelectedSchool(school);
                     setIsOpen(false);
                   }}
                   className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
                 >
-                  {school}
+                  {school.name}
                 </button>
               ))}
             </div>
